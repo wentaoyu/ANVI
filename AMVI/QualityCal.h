@@ -1,0 +1,93 @@
+#pragma once
+
+#include <vector>
+#include <armadillo>
+using namespace std;
+using namespace arma;
+#define EP 0.00001
+#define PI 3.1415926
+const double finvData[100] =
+{
+	39.8634581890615,8.52631578947369,5.53831945626224,4.54477072037127,4.06041994687207,
+	3.77594960258354,3.58942809086480,3.45791890388502,3.36030302387155,3.28501532170376,
+	3.22520228205165,3.17654893102241,3.13620509302157,3.10221339438333,3.07318554959386,
+	3.04810981108788,3.02623156140563,3.00697659179543,2.98990027987981,2.97465301746377,
+	2.96095613757745,2.94858480246571,2.93735561362201,2.92711749135522,2.91774486025022,
+	2.90913248820394,2.90119152933049,2.89384645551648,2.88703265229657,2.88069451716171,
+	2.87478394196582,2.86925909190093,2.86408341558128,2.85922483677923,2.85465509008965,
+	2.85034917149206,2.84628488128242,2.84244244175603,2.83880417576149,2.83535423511141,
+	2.83207837006218,2.82896373279063,2.82599870916569,2.82317277417170,2.82047636719108,
+	2.81790078404297,2.81543808319965,2.81308100406485,2.81082289553451,2.80865765336697,
+	2.80657966512018,2.80458376160752,2.80266517399300,2.80081949577347,2.79904264901363,
+	2.79733085428526,2.79568060384777,2.79408863767040,2.79255192194627,2.79106762980680,
+	2.78963312397752,2.78824594114234,2.78690377783953,2.78560447769974,2.78434601989270,
+	2.78312650864146,2.78194416369900,2.78079731168111,2.77968437816679,2.77860388048622,
+	2.77755442114059,2.77653468176761,2.77554341762055,2.77457945250167,2.77364167410633,
+	2.77272902974532,2.77184052240150,2.77097520709870,2.77013218755099,2.76931061306611,
+	2.76850967568244,2.76772860752055,2.76696667832711,2.76622319319924,2.76549749047076,
+	2.76478893974851,2.76409694008672,2.76342091828711,2.76276032731693,2.76211464483049,
+	2.76148337179511,2.76086603120206,2.76026216686734,2.75967134230598,2.75909313968025,
+	2.75852715881555,2.75797301627617,2.75743034449854,2.75689879097934,2.75637801751255
+};
+
+class QualityCal
+{
+public:
+	QualityCal();
+	QualityCal(float* RedData, float* NirData, float* SolarZenith, float* ViewZenith, float* RaAngle,
+		unsigned char landcover, int sizeMODIS, int size, unsigned char* cloudMASK);
+	~QualityCal();
+
+private:
+
+	float mean(vector<float> data);
+
+	float max_k_select(vector <float> a, int k);
+
+	void BRDF_Total(fvec RedDataT2, fvec NirDataT2, fvec SZ_T2, fvec VZ_T2, fvec RA_T2, fvec NDVI_T2);
+
+	void brdf_forward_RLM(fvec SZ, fvec VZ, fvec RA, fvec& kvol, fvec& kgeo);
+
+
+	float Ross_thick(float sz, float vz, float relaz);
+
+	float Li_Transit(float sZenith, float vZenith, float rAzimuth);
+	
+
+	void iterls(fmat B, fmat Pll, fmat l,fvec& xils, frowvec& Pfnew);
+	
+
+private:
+	int n1, n2, n3, n4;  //分别为：总数，mds数，角度优化，含云
+	vector<float> refb1_c;     //有效无云数据
+	vector<float> refb2_c;
+	vector<float> sangle_c;
+	vector<float> vangle_c;
+	vector<float> rangle_c;
+	vector<float> ndvi_c;
+	vector<int>qcref_new;
+
+	vector<float> refb1_a1;   //不含云的MVC和CV-MVC
+	vector<float> refb2_a1;
+	vector<float> ndvi_a1;
+
+	vector<float> refb1_a2;   //含云的MVC
+	vector<float> refb2_a2;
+	vector<float> ndvi_a2;
+	vector<int> tagT1;
+	vector<int> tagT2;  //pass the 1st outlier removal 's index
+	float ndvi_mvc_mask;
+	float ndvi_cv;
+	float ndvi_mvc_all;
+	int countMODIS;  //valid modis count
+	float* xils_b1;
+	float* xils_b2;
+
+	float refnew_b1;
+	float refnew_b2;
+	float newndvi;
+
+public:
+	void Process(float& newvi, float& newvi_qc);
+};
+
